@@ -1,0 +1,199 @@
+#!/bin/bash
+
+: '
+	Utility to Expose Local Device Port to Internet
+	
+	Author	: 	Viki ( a ) Vignesh Natarajan
+			:	vikiworks.io
+'
+
+REMOTE_IP=""
+REMOTE_UNAME=""
+REMOTE_PASS=''
+REMOTE_SSH_PORT=""
+REMOTE_DETAILS=""
+
+THIS_USER=$USER
+
+LOCAL_PORT="22"
+
+#RUN_BACKGROUND="true"
+
+#Single Line Usage:
+#./remote_debugger <username>@<remote_ip> <remote_ssh_port>
+#./remote_debugger testuser@2.3.4.5 
+
+# Prerequisite check
+
+which sshpass > /dev/null 
+if [ $? -ne 0 ]; then
+	echo " [ error ] ( sshpass ) is not installed in this system, Install and try again"
+    exit 1
+fi
+
+which ssh > /dev/null 
+if [ $? -ne 0 ]; then
+	echo " [ error ] ( ssh ) is not installed in this system, Install and try again"
+    exit 1
+fi
+
+RS1=" Enter jump server IP ADDRESS / DOMAIN NAME : " 
+RS2=" Enter remote server username               : "
+RS3=" Enter remote server password               : "
+ S4=" Remote Host Details                        :"
+ S5=" Remote Port                                :"
+HLP=" Press ( ctrl + c ) to exit application      "
+if [ $# -lt 1 ]; then 
+	echo
+	echo
+	echo "$HLP"
+	echo
+	echo
+
+	while [ 1 ]
+	do
+    	if [[ ! -z $REMOTE_IP ]]; then
+        	break
+    	fi
+    	read -p "$RS1" REMOTE_IP     </dev/tty
+	done
+
+	while [ 1 ]
+	do
+    	if [[ ! -z $REMOTE_UNAME ]]; then
+        	break
+    	fi
+    	read -p "$RS2" REMOTE_UNAME  </dev/tty
+	done
+    REMOTE_DETAILS="${REMOTE_UNAME}@${REMOTE_IP}"
+else
+	
+	if [ ! -z "$1" ]; then
+    	REMOTE_DETAILS=$1
+	fi
+	
+	if [ ! -z "$2" ]; then
+    	REMOTE_SSH_PORT=$2
+	else
+		REMOTE_SSH_PORT=22
+	fi
+	echo
+
+	echo "$S4 $REMOTE_DETAILS"
+    echo "$S5 $REMOTE_SSH_PORT"
+fi
+
+if [ -z "$REMOTE_SSH_PORT" ]; then
+	REMOTE_SSH_PORT=22
+fi
+
+while [ 1 ]
+do
+	if [[ ! -z $REMOTE_PASS ]]; then
+		break
+	fi
+	read -sp "$RS3" REMOTE_PASS
+done
+
+echo 
+echo 
+
+#Users in the internet can use this port along with $REMOTE_IP to communicate with THIS machine
+INCOMING_PORT=10000
+PORT_CHECK_LIMIT=10006
+
+ERROR_LOG="/tmp/expose_port_error.log"
+
+while [ $INCOMING_PORT -lt $PORT_CHECK_LIMIT ]
+do
+    #printf "."
+    rm $ERROR_LOG 2> /dev/null
+    
+    if [ -f "$ERROR_LOG" ]; then
+        echo
+        echo
+        echo "[ error  ] Unable to access file ( $ERROR_LOG ) - permission error"
+        echo "[ error  ] Manually remove file ( $ERROR_LOG ) and try again"
+        exit 1
+    fi
+
+    touch $ERROR_LOG
+   
+	sshpass -p $REMOTE_PASS  ssh -o StrictHostKeyChecking=no -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p $REMOTE_SSH_PORT $REMOTE_DETAILS 2> $ERROR_LOG
+	
+    #Check Command Exit Status
+    if [ $? -ne 0 ]; then
+        echo
+        echo
+        echo "[ status ] Execution Error : "
+        echo
+        printf "\t( execution failure ) ssh -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p 22 $REMOTE_UNAME@$REMOTE_IP 2> $ERROR_LOG"
+        echo
+        echo
+    	rm $ERROR_LOG 2> /dev/null
+        exit 1
+    fi  
+
+    sleep 1
+
+    #Check Port Expose Status  
+    if [ -f "$ERROR_LOG" ]; then
+        #The above commane will throw "Warning error if the port is already used by other servers"
+        grep -i "warning" $ERROR_LOG | grep "$INCOMING_PORT" > /dev/null
+
+        if [ $? -eq 0 ]; then
+            printf "."
+            #echo
+            #echo
+            #echo "Unable to expose local port ($LOCAL_PORT) with remote port ($INCOMING_PORT)"
+        else
+            break
+        fi
+
+    fi
+
+
+    INCOMING_PORT=$[$INCOMING_PORT+1]
+    sleep 2
+done
+
+SERVER_DETAILS=`echo $REMOTE_DETAILS | awk -F@ '{print $2}'`
+
+echo ""
+echo ""
+echo "####################################################################"
+echo ""
+echo ""
+echo " You can access this device via ssh using the following details, "
+echo ""
+echo ""
+echo "          ssh $THIS_USER@$SERVER_DETAILS -p $INCOMING_PORT "
+echo ""
+echo ""
+echo "####################################################################"
+echo ""
+echo ""
+
+rm $ERROR_LOG 2> /dev/null
+
+if [ "$RUN_BACKGROUND" = "true" ]; then
+    exit 0
+fi
+
+signal_handler () {
+    trap SIGINT   
+    echo                
+    echo " Stopping debugger running on port -> $INCOMING_PORT"    
+    ps -ef | grep "ssh" | grep 'localhost' | grep "$INCOMING_PORT" | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}   
+    echo " Exitting remote_debugger"    
+    exit                     
+}
+
+trap "signal_handler" INT            # Set up SIGINT trap to call function.
+echo "$HLP"
+printf " "
+while [ 1 ]
+do
+    sleep 1
+done  
+
