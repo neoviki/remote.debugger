@@ -51,6 +51,27 @@ This utility is used to access a device remotely for debugging
 
 		################################################################
 
+##### Example 3 -> Run debugger in background
+	
+	$./remote_debugger remote_user@test.domain.com -bg
+
+		###############################################################
+
+
+		 You can access this device via ssh using the following details,
+
+			    ssh local_user@test.domain.com -p 10000 
+
+
+		################################################################
+
+
+    -bg: This option is used to run the debugger in background 
+
+##### Caution!!:
+   
+    Remember to terminate the debugger after completing your work using "terminate_remote_debugger".
+
 
 #### Terminate Debugger
 
