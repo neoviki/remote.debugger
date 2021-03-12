@@ -1,5 +1,6 @@
-echo "This script should be run under username : jumpserver"
-sudo
+echo
+echo "This command should be run as username : jumpserver"
+echo
 
 #Delete Stale Configurations
 sed -i '/GatewayPorts/d' /etc/ssh/sshd_config
