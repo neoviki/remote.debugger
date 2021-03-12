@@ -238,7 +238,7 @@ ls "${DIR_NAME}"  | grep $BASE_NAME | xargs -I{} rm {}    2> /dev/null  1> /dev/
 
 rm $ERROR_LOG 2> /dev/null
 #send the exposed port details to server
-FILE_NAME="${EXPOSED_PORT_FILE}_${INCOMING_PORT}"
+FILE_NAME="${DIR_NAME}/${BASE_NAME}_${INCOMING_PORT}"
 touch $FILE_NAME
 sshpass -p $REMOTE_PASS  scp -P $REMOTE_SSH_PORT $FILE_NAME ${REMOTE_UNAME}@${REMOTE_IP}:~/ 2> $ERROR_LOG
 
