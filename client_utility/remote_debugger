@@ -7,17 +7,19 @@
 			:	vikiworks.io
 '
 
-REMOTE_IP=""
-REMOTE_UNAME=""
+REMOTE_UNAME="jumpserver"
 REMOTE_PASS=''
+REMOTE_IP=""
 REMOTE_SSH_PORT="22"
-
-
-
-
-
-
 REMOTE_DETAILS=""
+
+#Users in the internet can use this port along with $REMOTE_IP to communicate with THIS machine
+INCOMING_PORT=10000
+PORT_CHECK_LIMIT=20000
+
+ERROR_LOG="/tmp/expose_port_error.log"
+
+EXPOSED_PORT_FILE="./exposed_port.txt"
 
 THIS_USER=$USER
 
@@ -156,11 +158,8 @@ echo
 echo 
 
 
-#Users in the internet can use this port along with $REMOTE_IP to communicate with THIS machine
-INCOMING_PORT=10000
-PORT_CHECK_LIMIT=10006
-
-ERROR_LOG="/tmp/expose_port_error.log"
+#Remove All Existing Exposed Connections
+ps -ef | grep "ssh" | grep ':localhost:' | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}
 
 while [ $INCOMING_PORT -lt $PORT_CHECK_LIMIT ]
 do
@@ -214,6 +213,9 @@ do
     INCOMING_PORT=$[$INCOMING_PORT+1]
     sleep 2
 done
+
+rm $EXPOSED_PORT_FILE
+echo $INCOMING_PORT > $EXPOSED_PORT_FILE
 
 echo ""
 echo ""
