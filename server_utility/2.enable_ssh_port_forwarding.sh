@@ -1,3 +1,6 @@
+echo "This script should be run under username : jumpserver"
+sudo
+
 #Delete Stale Configurations
 sed -i '/GatewayPorts/d' /etc/ssh/sshd_config
 sed -i '/AllowTcpForwarding/d' /etc/ssh/sshd_config
