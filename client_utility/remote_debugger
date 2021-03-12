@@ -161,6 +161,10 @@ echo
 #Remove All Existing Exposed Connections
 ps -ef | grep "ssh" | grep ':localhost:' | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}
 
+#Remove Stale SSH Keys
+sed -i '' "/$REMOTE_IP/d" ~/.ssh/known_hosts        2> /dev/null 1> /dev/null
+sed -i '' "/$REMOTE_IP/d" ~/.ssh/authorized_keys    2> /dev/null 1> /dev/null
+
 while [ $INCOMING_PORT -lt $PORT_CHECK_LIMIT ]
 do
     #printf "."
