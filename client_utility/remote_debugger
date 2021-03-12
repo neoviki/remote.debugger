@@ -159,8 +159,7 @@ echo
 
 
 #Remove All Existing Exposed Connections
-ps -ef | grep "ssh" | grep ':localhost:' | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}
-
+ps -ef | grep "ssh" | grep ':localhost:' | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {} 2> /dev/null 1> /dev/null1
 #Remove Stale SSH Keys
 sed -i '' "/$REMOTE_IP/d" ~/.ssh/known_hosts        2> /dev/null 1> /dev/null
 sed -i '' "/$REMOTE_IP/d" ~/.ssh/authorized_keys    2> /dev/null 1> /dev/null
@@ -218,9 +217,6 @@ do
     sleep 2
 done
 
-rm $EXPOSED_PORT_FILE
-echo $INCOMING_PORT > $EXPOSED_PORT_FILE
-
 echo ""
 echo ""
 echo "####################################################################"
@@ -236,13 +232,15 @@ echo "####################################################################"
 echo ""
 echo ""
 
-rm $ERROR_LOG 2> /dev/null
+DIR_NAME=`dirname $EXPOSED_PORT_FILE`
+BASE_NAME=`basename $EXPOSED_PORT_FILE`
+ls "${DIR_NAME}"  | grep $BASE_NAME | xargs -I{} rm {}    2> /dev/null  1> /dev/null
 
+rm $ERROR_LOG 2> /dev/null
 #send the exposed port details to server
-FILE_NAME="exposed_${INCOMING_PORT}"
+FILE_NAME="${EXPOSED_PORT_FILE}_${INCOMING_PORT}"
 touch $FILE_NAME
 sshpass -p $REMOTE_PASS  scp -P $REMOTE_SSH_PORT $FILE_NAME ${REMOTE_UNAME}@${REMOTE_IP}:~/ 2> $ERROR_LOG
-rm $FILE_NAME
 
 if [ "$RUN_BACKGROUND" = "true" ]; then
     exit 0

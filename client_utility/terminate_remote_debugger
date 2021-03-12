@@ -1,2 +1,8 @@
+EXPOSED_PORT_FILE="./exposed_port"
+  
+DIR_NAME=`dirname $EXPOSED_PORT_FILE`
+BASE_NAME=`basename $EXPOSED_PORT_FILE`
+ls "${DIR_NAME}"  | grep $BASE_NAME | xargs -I{} rm {}
+
 ps -ef | grep "remote_debugger" | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}
 ps -ef | grep "ssh" | grep ':localhost:' | grep -v "grep" | awk '{print $2}' | xargs -I{} kill -9 {}
