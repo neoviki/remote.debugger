@@ -179,7 +179,7 @@ do
 
     touch $ERROR_LOG
 	
-    sshpass -p $REMOTE_PASS  ssh -o StrictHostKeyChecking=no -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p $REMOTE_SSH_PORT ${REMOTE_UNAME}@${REMOTE_IP} 2> $ERROR_LOG
+    sshpass -p $REMOTE_PASS  ssh -o StrictHostKeyChecking=no -tt -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p $REMOTE_SSH_PORT ${REMOTE_UNAME}@${REMOTE_IP} 2> $ERROR_LOG
 	
     #Check Command Exit Status
     if [ $? -ne 0 ]; then
@@ -187,7 +187,7 @@ do
         echo
         echo "[ status ] Execution Error : "
         echo
-        printf "\t( execution failure ) ssh -o StrictHostKeyChecking=no -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p $REMOTE_SSH_PORT ${REMOTE_UNAME}@${REMOTE_IP} 2> $ERROR_LOG"
+        printf "\t( execution failure ) ssh -o StrictHostKeyChecking=no -tt -f -N  -R $INCOMING_PORT:localhost:$LOCAL_PORT -p $REMOTE_SSH_PORT ${REMOTE_UNAME}@${REMOTE_IP} 2> $ERROR_LOG"
         echo
         echo
     	rm $ERROR_LOG 2> /dev/null
